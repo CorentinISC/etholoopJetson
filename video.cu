@@ -374,10 +374,11 @@ void encoderThread()
     // End stream cleanly
     g_signal_emit_by_name(appsrc, "end-of-stream", nullptr);
 
-    gst_element_set_state(pipeline, GST_STATE_NULL);
+    GstBus* bus = gst_element_get_bus(pipeline);
+    gst_bus_timed_pop_filtered(bus,GST_CLOCK_TIME_NONE,(GstMessageType)(GST_MESSAGE_EOS | GST_MESSAGE_ERROR));
+    gst_object_unref(bus);
 
-    gst_object_unref(appsrc);
-    gst_object_unref(pipeline);
+    gst_element_set_state(pipeline, GST_STATE_NULL);
 
     timestampsFile.close();
 

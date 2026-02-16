@@ -411,6 +411,16 @@ int cameraInit(VideoCapture& cap)
     // Set camera fps
     cap.set(CV_CAP_PROP_XI_FRAMERATE, TARGET_FPS);
 
+    cout << "[PARAMETERS] Gain - Wanted : " << ETH_GAIN << " | Set : " << cap.get(CV_CAP_PROP_XI_GAIN) << endl;
+    cout << "[PARAMETERS] FPS - Wanted : " << TARGET_FPS << " | Set : " << cap.get(CV_CAP_PROP_XI_FRAMERATE) << endl;
+    cout << "[PARAMETERS] Sensor Mode - Wanted : " << ETH_SENSOR_MODE << " | Set : " << cap.get(CV_CAP_PROP_XI_SENSOR_FEATURE_VALUE) << endl;
+    cout << "[PARAMETERS] Data Format - Wanted : " << ETH_DATA_FORMAT << " | Set : " << cap.get(CV_CAP_PROP_XI_DATA_FORMAT) << endl;
+    cout << "[PARAMETERS] Automatic exposure and gain - Wanted : " << ETH_AUTOMATIC_EXPOSURE_AND_GAIN << " | Set : " << cap.get(CV_CAP_PROP_XI_AEAG) << endl;
+    cout << "[PARAMETERS] Exposure time - Wanted : " << ETH_EXPOSURE_TIME << " | Set : " << cap.get(CV_CAP_PROP_XI_EXPOSURE) << endl;
+    cout << "[PARAMETERS] Output Data Bit Depth - Wanted : " << ETH_OUTPUT_DATA_BIT_DEPTH << " | Set : " << cap.get(CV_CAP_PROP_XI_OUTPUT_DATA_BIT_DEPTH) << endl;
+    cout << "[PARAMETERS] Auto White Balance - Wanted : " << ETH_AUTOMATIC_WHITE_BALANCE << " | Set : " << cap.get(CV_CAP_PROP_XI_AUTO_WB) << endl;
+    cout << "[PARAMETERS] GammaY - Wanted : " << ETH_GAMMAY << " | Set : " << cap.get(CV_CAP_PROP_XI_GAMMAY) << endl;
+
     return 1;
 }
 
@@ -424,6 +434,19 @@ int main(int argc, char* argv[])
     // variables for the udp socket
     char* hostMachine = argv[2];    // the third variable is the hostmachine name to send the udp messages
     char* port = argv[3];           // the fourth variable is the port
+    
+    cout << "[PARAMETERS] Selected mode : " << mode << endl;
+    cout << "[PARAMETERS] Name of host machine : " << hostMachine << endl;
+    cout << "[PARAMETERS] Port of host machine : " << port << endl;
+    cout << "[PARAMETERS] Video Framerate : " << TARGET_FPS << endl;
+    cout << "[PARAMETERS] Frame period : " << FRAME_PERIOD_NS << endl;
+    cout << "[PARAMETERS] Max Queue Size : " << MAX_QUEUE_SIZE << endl;
+    cout << "[PARAMETERS] Bitrate : " << BITRATE << endl;
+    cout << "[PARAMETERS] IFRAMEINTERVAL : " << IFRAMEINTERVAL << endl;
+    cout << "[PARAMETERS] WB_BLUE : " << WB_BLUE << endl;
+    cout << "[PARAMETERS] WB_GREEN : " << WB_GREEN << endl;
+    cout << "[PARAMETERS] WB_RED : " << WB_RED << endl;
+
     char message[50];
 
     char hostname[50];

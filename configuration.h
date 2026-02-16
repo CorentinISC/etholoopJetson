@@ -1,5 +1,3 @@
-#define ILOWV 20
-
 // White balance, fixed so the color filtering is always the same
 #define WB_BLUE 2
 #define WB_GREEN 1

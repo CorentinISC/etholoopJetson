@@ -22,7 +22,7 @@ const char* START_MESSAGE = "OK";
 const char* STOP_MESSAGE = "STOP";
 
 const int TARGET_FPS = 60;			// Video framerate.
-const int64_t FRAME_PERIOD_NS = (int64_t)(1e9 / TARGET_FPS);
+const int64_t FRAME_PERIOD_MS = (int64_t)(1e3 / TARGET_FPS);
 const size_t MAX_QUEUE_SIZE = 30;
 const long BITRATE = 3000000;
 const int IFRAMEINTERVAL = 30;			// Interval of frames during which images are not fully saved, only differences with the first one.

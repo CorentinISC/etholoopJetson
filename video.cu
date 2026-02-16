@@ -64,7 +64,7 @@ bool startRequest = false;
 struct FramePacket
 {
     cv::Mat raw;
-    int64_t timestamp_ns;  // steady_clock timestamp in ns
+    int64_t timestamp_ms;  // steady_clock timestamp in ns
 };
 
 mutex qMutex;
@@ -199,7 +199,7 @@ void captureThread(VideoCapture* cap)
         if (raw.empty())
             continue;
 
-        int64_t ts_ns = duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count();
+        int64_t ts_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
         {
             lock_guard<mutex> lock(qMutex);
@@ -208,7 +208,7 @@ void captureThread(VideoCapture* cap)
             if (queueFrames.size() >= MAX_QUEUE_SIZE)
                 queueFrames.pop_front();
 
-            queueFrames.push_back(FramePacket{raw.clone(), ts_ns});
+            queueFrames.push_back(FramePacket{raw.clone(), ts_ms});
         }
 
         qCv.notify_one();
@@ -294,10 +294,10 @@ void encoderThread()
     cv::Mat bgr_cpu;
 
     // Reference timestamp to make PTS start at 0
-    int64_t first_ts_ns = -1;
+    int64_t first_ts_ms = -1;
 
     // For strict FPS output
-    int64_t next_expected_ts_ns = -1;
+    int64_t next_expected_ts_ms = -1;
 
     while (!stopRecording)
     {
@@ -320,18 +320,18 @@ void encoderThread()
         if (!startRecord)
             continue;
 
-        if (first_ts_ns < 0)
+        if (first_ts_ms < 0)
         {
-            first_ts_ns = pkt.timestamp_ns;
-            next_expected_ts_ns = pkt.timestamp_ns;
+            first_ts_ms = pkt.timestamp_ms;
+            next_expected_ts_ms = pkt.timestamp_ms;
         }
 
         // Drop frames if camera is faster than target fps
-        if (pkt.timestamp_ns < next_expected_ts_ns)
+        if (pkt.timestamp_ms < next_expected_ts_ms)
         {
             continue;
         }
-        next_expected_ts_ns += FRAME_PERIOD_NS;
+        next_expected_ts_ms += FRAME_PERIOD_MS;
 
         // GPU processing
         gpu_raw.upload(pkt.raw);
@@ -349,14 +349,14 @@ void encoderThread()
         gst_buffer_unmap(buffer, &map);
 
         // Set timestamps
-        int64_t pts_ns = pkt.timestamp_ns - first_ts_ns;
+        int64_t pts_ms = pkt.timestamp_ms - first_ts_ms;
 
-        GST_BUFFER_PTS(buffer) = pts_ns;
-        GST_BUFFER_DTS(buffer) = pts_ns;
-        GST_BUFFER_DURATION(buffer) = FRAME_PERIOD_NS;
+        GST_BUFFER_PTS(buffer) = pts_ms;
+        GST_BUFFER_DTS(buffer) = pts_ms;
+        GST_BUFFER_DURATION(buffer) = FRAME_PERIOD_MS;
 
         // Log acquisition timestamp (real)
-        timestampsFile << pkt.timestamp_ns << "\n";
+        timestampsFile << pkt.timestamp_ms << "\n";
 
         // Push to pipeline
         GstFlowReturn ret;
@@ -439,7 +439,7 @@ int main(int argc, char* argv[])
     cout << "[PARAMETERS] Name of host machine : " << hostMachine << endl;
     cout << "[PARAMETERS] Port of host machine : " << port << endl;
     cout << "[PARAMETERS] Video Framerate : " << TARGET_FPS << endl;
-    cout << "[PARAMETERS] Frame period : " << FRAME_PERIOD_NS << endl;
+    cout << "[PARAMETERS] Frame period : " << FRAME_PERIOD_MS << endl;
     cout << "[PARAMETERS] Max Queue Size : " << MAX_QUEUE_SIZE << endl;
     cout << "[PARAMETERS] Bitrate : " << BITRATE << endl;
     cout << "[PARAMETERS] IFRAMEINTERVAL : " << IFRAMEINTERVAL << endl;

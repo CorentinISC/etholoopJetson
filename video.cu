@@ -187,7 +187,8 @@ void udpThread()
             startRequest = true;
         }
         else if (strcmp(buf, WAIT_MESSAGE) == 0) {
-            loop_count-=1;
+            // Reset du nombre de boucle à faire avant le timeout
+            loop_count=0;
         }
         else if (strcmp(buf, STOP_MESSAGE) == 0) {
             stopRecording = true;

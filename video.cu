@@ -52,6 +52,13 @@ atomic<bool> stopRecording(false);
 atomic<bool> startRecord(false);
 
 /******************************************************************
+ * Time out GLOBALS
+ ******************************************************************/
+
+atomic<int> loop_count(0);
+int max_loop_count = 100;
+
+/******************************************************************
  * UDP GLOBALS
  ******************************************************************/
 int sockfd;
@@ -149,6 +156,12 @@ void sendUnicastReply(const char* msg, const sockaddr_in& dest)
  */
 void udpThread()
 {
+    timeval tv;
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
+
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    
     char buf[50];
     sockaddr_in srcAddr{};
     socklen_t srcLen = sizeof(srcAddr);
@@ -167,17 +180,21 @@ void udpThread()
 
         buf[n] = '\0';
 
-        std::cout << "Received: " << buf << std::endl;
+        cout << "Received: " << buf << endl;
 
         // Traitement des messages
         if (strcmp(buf, START_MESSAGE) == 0) {
             startRequest = true;
         }
+        else if (strcmp(buf, WAIT_MESSAGE) == 0) {
+            loop_count-=1;
+        }
         else if (strcmp(buf, STOP_MESSAGE) == 0) {
             stopRecording = true;
-	    qCv.notify_all();
+	        qCv.notify_all();
         }
     }
+    cout << "[UDP] End udpThread" << endl;
 }
 
 /******************************************************************
@@ -213,6 +230,7 @@ void captureThread(VideoCapture* cap)
 
         qCv.notify_one();
     }
+    cout << "[CAPTURE] End of captureThread" << endl;
 }
 
 /******************************************************************
@@ -313,7 +331,7 @@ void encoderThread()
             if (stopRecording)
                 break;
 
-            pkt = std::move(queueFrames.front());
+            pkt = move(queueFrames.front());
             queueFrames.pop_front();
         }
 
@@ -471,25 +489,43 @@ int main(int argc, char* argv[])
         cout << "Starting capture/encode pipeline." << endl;
 
         // Start threads
-	std::thread tCom(udpThread);
-        std::thread tCap(captureThread, &cap);
-        std::thread tEnc(encoderThread);
+	    thread tCom(udpThread);
+        thread tCap(captureThread, &cap);
+        thread tEnc(encoderThread);
 
         // Send a message to inform the system is ready.
-	strcpy(message, READY_MESSAGE);
+	    strcpy(message, READY_MESSAGE);
         sendto(sockfd, &message, sizeof(message), 0, (struct sockaddr*)&pcAddr, sizeof(pcAddr));
 
         cout<<"Ready message sent. Waiting for the start signal."<<endl;
         
-        while(!startRequest){}	// TODO : Add a timeout to end the process.
+        while(!startRequest){
+            
+            // Timeout
+            if (loop_count>=max_loop_count){
+                cout<<"Timeout reached. Stopping the software..."<<endl;
+                stopRecording = true;
+                qCv.notify_all();
+
+                tCom.join();
+                tCap.join();
+                tEnc.join();
+                cap.release();
+                cout << "End of Jetson script." << endl;
+                return 0;
+            }
+
+            this_thread::sleep_for(chrono::milliseconds(100));
+            loop_count++;
+        }
 
         cout<<"Start message received."<<endl;
 
-	startRecord = true;
-	qCv.notify_all();
+        startRecord = true;
+        qCv.notify_all();
 
-	tCom.join();
-	tCap.join();
+        tCom.join();
+        tCap.join();
         tEnc.join();
 
         cap.release();

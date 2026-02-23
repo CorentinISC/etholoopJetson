@@ -19,6 +19,7 @@
 #define BROADCAST_PORT 5000
 const char* READY_MESSAGE = "GO";  
 const char* START_MESSAGE = "OK";
+const char* WAIT_MESSAGE = "WAIT";
 const char* STOP_MESSAGE = "STOP";
 
 const int TARGET_FPS = 60;			// Video framerate.

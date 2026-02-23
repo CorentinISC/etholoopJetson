@@ -367,11 +367,11 @@ void encoderThread()
         gst_buffer_unmap(buffer, &map);
 
         // Set timestamps
-        int64_t pts_ms = pkt.timestamp_ms - first_ts_ms;
+        int64_t pts_ns = (pkt.timestamp_ms - first_ts_ms) * GST_MSECOND;
 
-        GST_BUFFER_PTS(buffer) = pts_ms;
-        GST_BUFFER_DTS(buffer) = pts_ms;
-        GST_BUFFER_DURATION(buffer) = FRAME_PERIOD_MS;
+	    GST_BUFFER_PTS(buffer) = pts_ns;
+	    GST_BUFFER_DTS(buffer) = pts_ns;
+	    GST_BUFFER_DURATION(buffer) = FRAME_PERIOD_MS * GST_MSECOND;
 
         // Log acquisition timestamp (real)
         timestampsFile << pkt.timestamp_ms << "\n";

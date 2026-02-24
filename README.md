@@ -10,6 +10,8 @@ Pour cela on va faire `.pt` -> `.onnx` -> `.engine`.
 
 On peut télécharger les `.pt` par exemple [ici](https://docs.ultralytics.com/models/yolov8/#performance-metrics).
 
+On peut entrainer le modèle sur un dataset précis avec le code dans `train`.
+
 Pour convertir un `.pt` en `.onnx` on utilise un code python du type :
 
 ```

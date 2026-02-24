@@ -112,15 +112,22 @@ void yoloThread(FrameQueue& queue,const string& enginepath){
 
 int main() {
 
-    int framerate = 5;
+    int framerate = 20;
     XI_IMG_FORMAT img_format = XI_RGB24;
     int width = 1280;
     int height = 1024;
-    int nb_frame = 200;
+    int nb_frame = 500;
     int exposure = 100000;
 
-    Ximea ximea(exposure, "XIMEA_X10",height,width,img_format);
-    ximea.InitXimea();
+    // Input Source
+    // Ximea ximea(exposure, "XIMEA_X10",height,width,img_format);
+    // ximea.InitXimea();
+    VideoCapture cap("/home/nvidia/Desktop/yolo_jetson/X20.mkv");
+    if (!cap.isOpened()) {
+        cout << "Erreur ouverture vidéo" << endl;
+        return -1;
+    }
+
 
     //FrameQueue queue_writer(100);
     FrameQueue queue_yolo(1);
@@ -143,8 +150,12 @@ int main() {
 
     for(int i = 0; i < nb_frame; i++){
         
-        Mat img = ximea.get_frame();
+        // Récupère la frame
+        // Mat img = ximea.get_frame();
+        Mat img;
+        cap >> img;
 
+        // Ecriture pour la vidéo
         // Frame f1;
         // f1.image = img;
         // if (!queue_writer.try_push(move(f1))) {
@@ -152,7 +163,7 @@ int main() {
         //     lost_frame+=1;
         // }
 
-        // YOLO
+        // Inférence YOLO
         Frame f2;
         f2.image = img;
         queue_yolo.try_push(move(f2));
@@ -176,7 +187,7 @@ int main() {
     queue_yolo.push(move(f));
     tYolo.join();
 
-    ximea.closeXimea();
+    //ximea.closeXimea();
 
     cout << "Temps de la boucle : " << dt << " Prévu : " << expected << endl;
     cout << "Frames perdues : " << lost_frame << endl;
